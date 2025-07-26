@@ -5,7 +5,7 @@ import { getYupFieldConfig } from "./field-config";
 import { ParsedField, ParsedSchema } from "@autoform/core";
 import { YupEnumSchema, YupField, YupObjectOrWrapped } from "./types";
 
-function parseField(key: string, schema: YupField): ParsedField {
+function parseField(key: string, schema: YupField): ParsedField & { objectSchema: any } {
   const fieldConfig = getYupFieldConfig(schema);
   const type = inferFieldType(schema, fieldConfig);
   const defaultValue = getYupFieldDefaultValue(schema);
@@ -25,6 +25,7 @@ function parseField(key: string, schema: YupField): ParsedField {
   // Arrays and objects
   let subSchema: ParsedField[] = [];
   const objectSchema = schema as yup.ObjectSchema<any>;
+
   if (schema.type === "object" && objectSchema.fields) {
     subSchema = Object.entries(objectSchema.fields).map(([key, field]) =>
       parseField(key, field as YupField)
@@ -34,16 +35,17 @@ function parseField(key: string, schema: YupField): ParsedField {
   if (schema.type === "array" && arraySchema.innerType) {
     subSchema = [parseField("0", arraySchema.innerType as YupField)];
   }
-
   return {
     key,
-    type,
+    type: schema.spec?.meta?.fieldType ?? type,
     required: !schema.spec.optional,
     default: defaultValue,
     description: schema.spec.label,
     fieldConfig,
     options: optionValues,
     schema: subSchema,
+    //@ts-expect-error
+    yupSchema: objectSchema,
   };
 }
 

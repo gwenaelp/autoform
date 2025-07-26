@@ -32,7 +32,7 @@ export const AutoFormField: React.FC<{
   );
 
   if (field.type === "array") {
-    FieldComponent = ArrayField;
+    FieldComponent = formComponents.array ?? ArrayField;
   } else if (field.type === "object") {
     FieldComponent = ObjectField;
   } else if (field.type in formComponents) {
